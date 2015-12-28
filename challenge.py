@@ -140,10 +140,7 @@ opcodes = {
 while 0<=insI<len(adds):
     args=list(adds[insI+1+i] for i in range(opcodes[adds[insI]][1]))
     a=opcodes[adds[insI]][0](*args)
-    if a==None:
-        insI+=len(args)+1
-    else:
-        insI=a
+    insI=insI+len(args)+1 if a==None else a
 
 #insI (or pc) should never reference a value outside of the bin file
 print "Error. Memory address referenced is out of bounds"
