@@ -1,15 +1,15 @@
+#lE returns the decimal equivalent of a little-endian
+#pair given the low-byte and high-byte as 2 chars
 from funcs import lE
 import sys
 
 data=open("challenge.bin","rb").read()
-register=[0,0,0,0,0,0,0,0]
-callStack=[] #stack of insI to Ret to after a Call
-insI=[0] #instructionIndex, also known as pc. array so it's global
+register=[0,0,0,0,0,0,0,0] #registers referenced through 32768-32775
+callStack=[] #stack of insI to pop and Ret to
+insI=0 #instructionIndex, also known as pc. array so it's global
 
 #adds is the array of little-endian 16-bit pairs as integers
-adds=[]
-for i in range(0,len(data)-1,2):
-    adds.append(lE(data[i],data[i+1]))
+adds = list(lE(data[i],data[i+1]) for i in range(0,len(data)-1,2))
 
 #shorthand to reference correct register addresses
 def r(x): return x-32768
@@ -35,62 +35,67 @@ def sets(x,y):
         sys.exit()
 
 #can also be called if executing Ret, but have an empty call stack
-def Halt (     ) : print "Program terminated"; sys.exit()
+def Halt():
+    print "Program terminated"
+    sys.exit()
 
 #a set function for registers only
-def Set  (x,y  ) : register[r(x)] = get(y);      insI[0]+=3
+def Set  (x,y  ) : register[r(x)] = get(y)
 
 #push onto call stack without having to call from it
-def Push (x    ) : callStack.append(get(x));     insI[0]+=2
+def Push (x    ) : callStack.append(get(x))
 
 #remove an item from call stack without having to Ret to it
-def Pop  (x    ) : sets(x, callStack.pop()    ); insI[0]+=2
+def Pop  (x    ) : sets(x, callStack.pop())
 
 #x is 1 if y and z are equal, and 0 otherwise
-def Eq   (x,y,z) : sets(x, int(get(y)==get(z))); insI[0]+=4
+def Eq   (x,y,z) : sets(x, int(get(y)==get(z)))
 
 #x is 1 if y is greater than z, and 0 otherwise
-def Gt   (x,y,z) : sets(x, int(get(y)> get(z))); insI[0]+=4
+def Gt   (x,y,z) : sets(x, int(get(y)> get(z)))
 
 #start executing from a different position
-def Jmp  (x    ) : insI[0]=get(x)
+def Jmp  (x    ) : return get(x)
 
 #Jump to y if x is non-zero
 def Jt(x,y):
     if get(x)!=0:
-        Jmp(y)
-    else:
-        insI[0]+=3
+        return Jmp(y)
 
 #Jump to y if x is zero
 def Jf(x,y):
     if get(x)==0:
-        Jmp(y)
-    else:
-        insI[0]+=3
+        return Jmp(y)
 
 #bitwise operations
-def Add  (x,y,z) : sets(x,(get(y) + get(z))%32768); insI[0]+=4
-def Mult (x,y,z) : sets(x,(get(y) * get(z))%32768); insI[0]+=4
-def Mod  (x,y,z) : sets(x, get(y) % get(z));        insI[0]+=4
-def And  (x,y,z) : sets(x, get(y) & get(z));        insI[0]+=4
-def Or   (x,y,z) : sets(x, get(y) | get(z));        insI[0]+=4
-def Not  (x,y  ) : sets(x, 32767  - get(y));        insI[0]+=3
+def Add  (x,y,z) : sets(x,(get(y) + get(z))%32768)
+def Mult (x,y,z) : sets(x,(get(y) * get(z))%32768)
+def Mod  (x,y,z) : sets(x, get(y) % get(z))
+def And  (x,y,z) : sets(x, get(y) & get(z))
+def Or   (x,y,z) : sets(x, get(y) | get(z))
+def Not  (x,y  ) : sets(x, 32767  - get(y))
 
 #set x to the value in the memory address y
-def Rmem (x,y  ) : sets(x,adds[get(y)]); insI[0]+=3
+def Rmem (x,y  ) : sets(x,adds[get(y)])
 
 #set the memory or register address x to y
-def Wmem (x,y  ) : sets(get(x),get(y)); insI[0]+=3
+def Wmem (x,y  ) : sets(get(x),get(y))
 
 #call a function, and set the opcode after as the point to return to
-def Call (x    ) : callStack.append(insI[0]+2); Jmp(get(x))
+def Call(x):
+    global insI
+    callStack.append(insI+2)
+    return Jmp(get(x))
 
 #return to the memory address given at the top of the stack
-def Ret  (     ) : Halt() if callStack==[] else Jmp(callStack.pop())
+def Ret():
+    if callStack==[]:
+        Halt()
+    else:
+        return Jmp(callStack.pop())
 
 #print the ascii code of x
-def Out  (x    ) : sys.stdout.write(chr(get(x))); insI[0]+=2
+def Out(x): sys.stdout.write(chr(get(x)))
 
 #read in a character at a time and store it in x
 def In(x):
@@ -99,12 +104,13 @@ def In(x):
     except IOError:
         char = sys.stdin.read(1)
     sets(x,ord(char))
-    insI[0]+=2
 
 #virtually a pass that also increments insI or pc
-def Noop(): insI[0]+=1
+def Noop(): pass
 
-#opcodes can be called like a function, based on the opcode given
+#1.opcodes can be called like a function, based on the opcode given
+#2.they return None if the main loop will set the next instruction based on
+#  the chosen functions arguments, or an index set by a jump function
 opcodes = {
     0  : [Halt, 0],
     1  : [Set,  2],
@@ -131,9 +137,13 @@ opcodes = {
 }
 
 #process opcodes 1 at a time, giving them the right number of arguments
-while insI[0]<len(adds):
-    args=list(adds[insI[0]+1+i] for i in range(opcodes[adds[insI[0]]][1]))
-    opcodes[adds[insI[0]]][0](*args)
+while 0<=insI<len(adds):
+    args=list(adds[insI+1+i] for i in range(opcodes[adds[insI]][1]))
+    a=opcodes[adds[insI]][0](*args)
+    if a==None:
+        insI+=len(args)+1
+    else:
+        insI=a
 
 #insI (or pc) should never reference a value outside of the bin file
 print "Error. Memory address referenced is out of bounds"
