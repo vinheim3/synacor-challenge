@@ -1,11 +1,11 @@
-#lE returns the decimal equivalent of a little-endian
-#pair given the low-byte and high-byte as 2 chars
+#funcs contains lE, which returns the decimal equivalent of a
+#little-endian pair given the low-byte and high-byte as 2 chars
 import sys,funcs
 
 data=open("challenge.bin","rb").read()
 register=[0,0,0,0,0,0,0,0] #registers referenced through 32768-32775
 callStack=[] #stack of insI to pop and Ret to
-insI=0 #instructionIndex, also known as pc. array so it's global
+insI=0 #instructionIndex, also known as pc
 
 #adds is the array of little-endian 16-bit pairs as integers
 adds = list(funcs.lE(data[i],data[i+1]) for i in range(0,len(data)-1,2))
