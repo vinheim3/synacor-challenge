@@ -1,7 +1,6 @@
 #lE returns the decimal equivalent of a little-endian
 #pair given the low-byte and high-byte as 2 chars
-from funcs import lE
-import sys
+import sys,funcs
 
 data=open("challenge.bin","rb").read()
 register=[0,0,0,0,0,0,0,0] #registers referenced through 32768-32775
@@ -9,7 +8,7 @@ callStack=[] #stack of insI to pop and Ret to
 insI=0 #instructionIndex, also known as pc. array so it's global
 
 #adds is the array of little-endian 16-bit pairs as integers
-adds = list(lE(data[i],data[i+1]) for i in range(0,len(data)-1,2))
+adds = list(funcs.lE(data[i],data[i+1]) for i in range(0,len(data)-1,2))
 
 #shorthand to reference correct register addresses
 def r(x): return x-32768
