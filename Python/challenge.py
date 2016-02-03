@@ -1,11 +1,11 @@
 #funcs contains lE, which returns the decimal equivalent of a
 #little-endian pair given the low-byte and high-byte as 2 chars
 import sys,funcs
-
+touched8=0
 data=open("challenge.bin","rb").read()
-register=[0,0,0,0,0,0,0,0] #registers referenced through 32768-32775
-callStack=[] #stack of insI to pop and Ret to
-insI=0 #instructionIndex, also known as pc
+register=[2708,5445,3,10,101,0,0,1] #registers referenced through 32768-32775
+callStack=[6080,16,6124,1,2952,25978,3568,3599,2708,5445,3] #stack of insI to pop and Ret to
+insI=5451 #instructionIndex, also known as pc
 
 #adds is the array of little-endian 16-bit pairs as integers
 adds = list(funcs.lE(data[i],data[i+1]) for i in range(0,len(data)-1,2))
@@ -15,6 +15,10 @@ def r(x): return x-32768
 
 #returns either x or the value in the register x
 def get(x):
+    global touched8
+    if x==32775:
+        print "got 8th"
+        touched8+=1
     if 0<=x<=32767:
         return x
     elif 32768<=x<=32775:
@@ -25,6 +29,10 @@ def get(x):
 
 #sets x to a value, or sets the register x to a value
 def sets(x,y):
+    global touched8
+    if x==32775:
+        print "set 8th"
+        touched8+=1
     if 0<=x<=32767:
         adds[x]=get(y)
     elif 32768<=x<=32775:
@@ -138,7 +146,11 @@ opcodes = {
 #process opcodes 1 at a time, giving them the right number of arguments
 while 0<=insI<len(adds):
     args=list(adds[insI+1+i] for i in range(opcodes[adds[insI]][1]))
+    prev=str(adds[insI])+" ["+" ".join(str(i) for i in args)+"] ["+" ".join(str(i) for i in register)+"] ["+" ".join(str(i) for i in callStack)+"]"
     a=opcodes[adds[insI]][0](*args)
+    #if touched8>1:
+    #    touched8-=1
+    print str(insI)+" "+prev
     insI=insI+len(args)+1 if a==None else a
 
 #insI (or pc) should never reference a value outside of the bin file

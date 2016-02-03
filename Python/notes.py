@@ -48,6 +48,7 @@ inputs=[
     "use concave coin",
     "use corroded coin",
     "go north",
+    "take teleporter",
     "use teleporter
 ]
 
