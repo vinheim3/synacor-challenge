@@ -1,1 +1,1 @@
-g++ -o main.exe main.cpp vm.cpp stack.cpp -std=c++11
+g++ -o main.exe main.cpp vm.cpp -std=c++14

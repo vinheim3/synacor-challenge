@@ -40,6 +40,12 @@ void VM::load(const char *filename)
 
 void VM::start()
 {
+    registers[7] = 1;
+    memory[521] = 8;
+    memory[5485] = 6;
+    memory[5489] = 21;
+    memory[5490] = 21;
+
     while(PC >= 0 & PC <= 32767)
         decodeOP();
     throw "Accessing outside of memory space.";
@@ -147,7 +153,7 @@ void VM::decodeOP()
             PC++;
             break;
         default:
-            throw memory[PC];
+            throw "Invalid opcode.";
     }
 }
 

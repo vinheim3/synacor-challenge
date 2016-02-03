@@ -16,7 +16,7 @@ private:
 
     uint16_t memory[0x8000];
     uint16_t registers[8];
-    Stack stack;
+    Stack<uint16_t> stack;
     uint16_t PC;
 };
 

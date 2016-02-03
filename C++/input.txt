@@ -47,3 +47,12 @@ use corroded coin
 go north
 take teleporter
 use teleporter
+go north
+go north
+go north
+go north
+go north
+go north
+go north
+go north
+go north

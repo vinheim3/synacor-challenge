@@ -1,18 +1,35 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include <cstdint>
-
+template <typename T>
 class Stack
 {
 public:
-    Stack();
-    void push(uint16_t value);
-    uint16_t pop();
+    Stack()
+    {
+        curr = nullptr;
+    }
+
+    void push(T value)
+    {
+        curr = new StackNode {value, curr};
+    }
+
+    T pop()
+    {
+        if (curr == nullptr)
+            throw "Popping from empty stack.";
+        
+        T val = curr->value;
+        StackNode *top = curr->parent;
+        delete curr;
+        curr = top;
+        return val;
+    }
 private:
     struct StackNode
     {
-        uint16_t value;
+        T value;
         StackNode *parent;
     } *curr;
 };
